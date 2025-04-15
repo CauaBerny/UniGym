@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login - Academia</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: blue;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      padding: 30px;
+    }
+
+    #login-container, .pagina {
+      background-color: #fff;
+      padding: 80px;
+      border-radius: 12px;
+      box-shadow: 0 0 10px #aaa;
+      width: 300px;
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    input, textarea {
+      width: 90%;
+      padding: 15px;
+      margin: 8px 0;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+
+    button {
+      padding: 10px 15px;
+      margin: 10px 5px;
+      border: none;
+      border-radius: 8px;
+      background-color: #3399ff;
+      color: white;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    button:hover {
+      background-color: #287bd1;
+    }
+
+    h2, h3 {
+      margin-bottom: 15px;
+    }
+
+    .tipo-container {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .tipo-btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      background-color: #ccc;
+      cursor: pointer;
+    }
+
+    .tipo-btn.ativo {
+      background-color: #3399ff;
+      color: white;
+    }
+
+    .tipo-btn:hover {
+      background-color: #287bd1;
+      color: white;
+    }
+
+    #resultado-imc {
+      margin: 10px 0;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div id="login-container">
+    <h2>Login</h2>
+    <div class="tipo-container">
+      <button class="tipo-btn ativo" onclick="selecionarTipo('aluno')">Aluno</button>
+      <button class="tipo-btn" onclick="selecionarTipo('professor')">Professor</button>
+    </div>
+    <input type="text" id="usuario" placeholder="RA ou Email" />
+    <input type="password" id="senha" placeholder="Senha" />
+    <button onclick="login()">Entrar</button>
+    <p id="erro"></p>
+  </div>
+
+  <div id="aluno-page" class="pagina" style="display: none;">
+    <h2>Bem-vindo, Aluno</h2>
+    <button onclick="abrirPagina('perfil')">Editar Perfil</button>
+    <button onclick="abrirPagina('agendamento')">Agendar Horário</button>
+    <button onclick="abrirPagina('treinos')">Meus Treinos</button>
+    <button onclick="voltarLogin()">Voltar ao Início</button>
+  </div>
+
+  <div id="professor-page" class="pagina" style="display: none;">
+    <h2>Bem-vindo, Professor</h2>
+    <button onclick="abrirPagina('cadastro')">Cadastrar Aluno</button>
+    <button onclick="abrirPagina('criar-treino')">Criar/Editar Treino</button>
+    <button onclick="voltarLogin()">Voltar ao Início</button>
+  </div>
+
+  <div id="perfil" class="pagina" style="display: none;">
+    <h3>Editar Perfil</h3>
+    <input type="number" id="peso" placeholder="Peso (kg)" />
+    <input type="number" step="0.01" id="altura" placeholder="Altura (m)" />
+    <input type="number" id="idade" placeholder="Idade" />
+    <input type="text" id="objetivo" placeholder="Objetivo (ex: emagrecer)" />
+    <button onclick="calcularIMC()">Calcular IMC</button>
+    <p id="resultado-imc"></p>
+    <button onclick="voltarAluno()">Voltar</button>
+  </div>
+
+  <div id="agendamento" class="pagina" style="display: none;">
+    <h3>Agendar Horário</h3>
+    <input type="time" />
+    <button onclick="voltarAluno()">Voltar</button>
+  </div>
+
+  <div id="treinos" class="pagina" style="display: none;">
+    <h3>Meus Treinos</h3>
+    <textarea id="treino-aluno" placeholder="Descrição do treino" readonly></textarea>
+    <button onclick="voltarAluno()">Voltar</button>
+  </div>
+
+  <div id="cadastro" class="pagina" style="display: none;">
+    <h3>Cadastrar Aluno</h3>
+    <input type="text" placeholder="Nome do aluno" />
+    <input type="text" placeholder="RA" />
+    <input type="password" placeholder="Senha" />
+    <button onclick="voltarProfessor()">Voltar</button>
+  </div>
+
+  <div id="criar-treino" class="pagina" style="display: none;">
+    <h3>Criar ou Editar Treino</h3>
+    <input type="text" id="ra-editar" placeholder="RA do aluno" />
+    <textarea id="treino-editado" placeholder="Treino personalizado"></textarea>
+    <button onclick="salvarTreino()">Salvar Treino</button>
+    <button onclick="voltarProfessor()">Voltar</button>
+  </div>
+
+  <script>
+    let tipoSelecionado = "aluno";
+    let alunoLogado = "";
+
+    const treinos = {
+      "123": "Treino inicial: 3x10 agachamento, 3x10 supino, 15min corrida"
+    };
+
+    function selecionarTipo(tipo) {
+      tipoSelecionado = tipo;
+      document.querySelectorAll(".tipo-btn").forEach(btn => btn.classList.remove("ativo"));
+      document.querySelector(`.tipo-btn:nth-child(${tipo === "aluno" ? 1 : 2})`).classList.add("ativo");
+    }
+
+    function login() {
+      const usuario = document.getElementById("usuario").value.trim();
+      const senha = document.getElementById("senha").value.trim();
+      const erro = document.getElementById("erro");
+
+      if (tipoSelecionado === "aluno") {
+        if (usuario === "123" && senha === "aluno") {
+          alunoLogado = usuario;
+          mostrarPagina("aluno-page");
+        } else {
+          erro.textContent = "Usuário ou senha inválidos (Aluno: RA 123, senha 'aluno')";
+        }
+      } else if (tipoSelecionado === "professor") {
+        if (usuario === "prof@exemplo.com" && senha === "professor") {
+          mostrarPagina("professor-page");
+        } else {
+          erro.textContent = "Usuário ou senha inválidos (Prof: prof@exemplo.com, senha 'professor')";
+        }
+      }
+    }
+
+    function mostrarPagina(id) {
+      document.querySelectorAll(".pagina").forEach(p => p.style.display = "none");
+      document.getElementById(id).style.display = "block";
+      document.getElementById("login-container").style.display = "none";
+
+      if (id === "treinos" && alunoLogado) {
+        document.getElementById("treino-aluno").value = treinos[alunoLogado] || "Nenhum treino disponível.";
+      }
+    }
+
+    function voltarLogin() {
+      document.querySelectorAll(".pagina").forEach(p => p.style.display = "none");
+      document.getElementById("login-container").style.display = "block";
+      document.getElementById("usuario").value = "";
+      document.getElementById("senha").value = "";
+      document.getElementById("erro").textContent = "";
+    }
+
+    function abrirPagina(id) {
+      document.querySelectorAll(".pagina").forEach(p => p.style.display = "none");
+      document.getElementById(id).style.display = "block";
+
+      if (id === "treinos" && alunoLogado) {
+        document.getElementById("treino-aluno").value = treinos[alunoLogado] || "Nenhum treino disponível.";
+      }
+    }
+
+    function voltarAluno() {
+      mostrarPagina("aluno-page");
+    }
+
+    function voltarProfessor() {
+      mostrarPagina("professor-page");
+    }
+
+    function calcularIMC() {
+      const peso = parseFloat(document.getElementById("peso").value);
+      const alturaM = parseFloat(document.getElementById("altura").value);
+      const resultado = document.getElementById("resultado-imc");
+
+      if (isNaN(peso) || isNaN(alturaM) || alturaM <= 0) {
+        resultado.textContent = "Preencha peso e altura corretamente.";
+        resultado.style.color = "red";
+        return;
+      }
+
+      const imc = peso / (alturaM * alturaM);
+      const imcFixado = imc.toFixed(2);
+      let classificacao = "";
+      let cor = "black";
+
+      if (imc < 16) {
+        classificacao = "Muito abaixo do peso";
+        cor = "red";
+      } else if (imc < 18.5) {
+        classificacao = "Abaixo do peso";
+        cor = "orange";
+      } else if (imc < 25) {
+        classificacao = "Peso normal";
+        cor = "green";
+      } else if (imc < 30) {
+        classificacao = "Sobrepeso";
+        cor = "orange";
+      } else {
+        classificacao = "Obesidade";
+        cor = "red";
+      }
+
+      resultado.textContent = `IMC: ${imcFixado} (${classificacao})`;
+      resultado.style.color = cor;
+    }
+
+    function salvarTreino() {
+      const ra = document.getElementById("ra-editar").value.trim();
+      const treino = document.getElementById("treino-editado").value.trim();
+
+      if (ra && treino) {
+        treinos[ra] = treino;
+        alert("Treino salvo com sucesso!");
+        document.getElementById("ra-editar").value = "";
+        document.getElementById("treino-editado").value = "";
+      } else {
+        alert("Preencha o RA e o treino.");
+      }
+    }
+  </script>
+</body>
+</html>
